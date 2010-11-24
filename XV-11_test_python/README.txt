@@ -1,0 +1,4 @@
+- Install VPython : http://vpython.org/index.html
+- open XV-11_test.py with VIDLE
+- F5
+- right clic to rotate, left+right clic at the same time then move up and down to zoom.
