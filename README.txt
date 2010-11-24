@@ -15,12 +15,17 @@ How to make the program work in live mode :
 - install VPython
 - install PySerial
 - open XV-11_test.py in VIDLE (installed with VPython)
-- set your COM port
+- set your COM port number (be careful, on Windows, COM5 has is the port number 4 ...)
 - F5 to run. Maintain left+right mouse button + move the mouse up and down to zoom.
+
 
 How to make an arduino spoof the lidar:
 
 - program LidarSpoofing on your arduino (works even with older Atmega168 based boards), and update your com port
+
+For better performances, you have to lower the latency (16ms by default on windows, 10ms on some Linux) of the COM port.
+On windows, this is an advanced property of the COM port, accessible through the Device Manager.
+
 
 How to extract your data to give them to the spoofer (from a Saleae Logic Scan, the long and secure way):
 - Open the session in Saleae Logic

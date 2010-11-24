@@ -20,10 +20,10 @@ limitations under the License.
 // external application listening to the erial port, it looks like the Piccolo
 // Lidar is talking.
 
-// include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 
 extern unsigned int nb_data ;
-extern PROGMEM  prog_uint8_t data[];
+extern PROGMEM prog_uint8_t data[];
 
 void setup() {
   // initialize the serial communication:
@@ -42,6 +42,6 @@ void loop() {
     k = 0;
   }
   
-  delayMicroseconds(100); // delay for debug, remov to have full speed
+  delayMicroseconds(10); // delay for debug, remov to have full speed
 }
 

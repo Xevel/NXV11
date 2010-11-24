@@ -24,7 +24,7 @@ import thread
 
 
 use_real_robot = True
-com_port = 2  # 5 = COM6 on Windows, tty5 on Linux
+com_port = 25  # 5 = COM6 on Windows, tty5 on Linux
 baudrate = 115200
 
 
