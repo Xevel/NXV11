@@ -39,19 +39,28 @@ ser = None
 
 # setup display
 point=points(pos=[(0,0,0) for i in range(360)], size=5, color=color.red)
+point2=points(pos=[(0,0,0) for i in range(360)], size=2, color=color.yellow)
 
 # update function, takes the angle (an int, from 0 to 359) and the four bytes of data
 def update_view( angle, x, x1, x2, x3):
-    dist_raw = x | (( x1 & 0x3f) << 8) # data on 12 bits ? 13 bits ? 14 bits ?
+    point2.pos[angle] = vector( 0,0, 0)
+
+    angle_rad = angle * pi / 180.0
+    c = cos(angle_rad)
+    s = sin(angle_rad)
+
+    dist_raw = x | (( x1 & 0x3f) << 8) # data on 13 bits ? 14 bits ?
+    second_value_raw = x2 | (x3 << 8) # data on 10 bits or more ?
 
     # compute the position of the sample
-    angle_rad = angle * pi / 180.0
-    point.pos[angle] = vector( dist_raw*cos(angle_rad),0, dist_raw*sin(angle_rad))
-    #if x1 & 0x80: # flag for "bad data" ?
-    #    point[angle].color = color.red # yes it's bad data
-    #else:
-    #    point[angle].color = color.yellow # no, it's cool
-        
+    if x1 & 0x80: # flag for "bad data" ?
+        # yes it's bad data
+        point.pos[angle] = vector( 0,0,0)
+    else:
+        # no, it's cool
+        #TODO determine what the bit 6 of x1 means...
+        point.pos[angle] = vector( dist_raw*c,0, dist_raw*s)
+        point2.pos[angle] = vector( second_value_raw*c,0, second_value_raw*s)
 
 
 # Demo Mode if you don't have a hacked robot

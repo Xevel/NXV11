@@ -1,7 +1,7 @@
 XV-11 test
 Copyright 2010 Nicolas "Xevel" Saugnier
 
-This repository contains the python visualizer, as well as the arduino sketch that spoofs a lidar (using a few full revolutions, because I only had an old Duemilanove(with 16k of flash) available).
+This repository contains the python visualizer, as well as the arduino sketch that spoofs a lidar (using a few full revolutions).
 
 How to make the program work in demo mode :
 
@@ -21,21 +21,20 @@ How to make the program work in live mode :
 
 How to make an arduino spoof the lidar:
 
-- program LidarSpoofing on your arduino (works even with older Atmega168 based boards), and update your com port
+- program LidarSpoofing on your arduino (works on ATmega328 and better, get an older version if you have an ATMega168 base board), and update your com port
 
 For better performances, you have to lower the latency (16ms by default on windows, 10ms on some Linux) of the COM port.
 On windows, this is an advanced property of the COM port, accessible through the Device Manager.
 
 
-How to extract your data to give them to the spoofer (from a Saleae Logic Scan, the long and secure way):
+How to extract your data to give them to the spoofer (from a Saleae Logic Scan, the long and not _too_ painful way):
 - Open the session in Saleae Logic
 - Choose "Analyser" > "Async Serial", set the correct channel and check "Use Autobaud"
 - click the "Export Analyser Data" of the analyser you just created, save to a file
 - copy the content (or just part of it) into an OpenOffice Calc spreadsheet, choose the comma as separator
-- discard the column containing the time, and the headers if any
-- save the spreadsheet in .CSV format
-- select the part you want to use, copy it into the LidarSpoofing/data.pde file, replacing the current data, and update the number of sample (equal to the number of lines you selected). Be careful not to copy too much, the arduino has limited flash memory.
-
+- discard the column containing the time, and the headers if any.  Move the data to column B, remove all the leading blank lines if any
+- save the spreadsheet in .CSV format, using a comma as field separator, and *nothing* as text separator
+- select the part you want to use, copy it into the LidarSpoofing/data.pde file, replacing the current data, and update the number of sample (equal to the number of lines you selected). Be careful not to copy too much, the arduino has limited flash memory. And the max size of an array is 32K...
 - program the arduino with this sketch, then run the python script. The last scan will probably be messed up, but it should go back to normal at the next revolution.
 
 
