@@ -38,19 +38,39 @@ ser = None
 
 
 # setup display
-point=points(pos=[(0,0,0) for i in range(360)], size=5, color=color.red)
-point2=points(pos=[(0,0,0) for i in range(360)], size=2, color=color.yellow)
+point=points(pos=[(0,0,0) for i in range(360)], size=5, color=(1,0,0))
+pointb=points(pos=[(0,0,0) for i in range(360)], size=5, color=(0.4,0,0))
+
+point2=points(pos=[(0,0,0) for i in range(360)], size=2, color=(1,1,0))
+point2b=points(pos=[(0,0,0) for i in range(360)], size=2, color=(0.4,0.4,0))
+
+point3=points(pos=[(0,0,0) for i in range(360)], size=5, color = (1,1,1))
+point3b=points(pos=[(0,0,0) for i in range(360)], size=5, color = (0.4,0.4,0.4))
+
+offset = 50
+ring(pos=(0,0,0), axis=(0,1,0), radius=offset-1, thickness=1, color = color.yellow)
+curve(pos=[(0,offset,0), (3000,offset,0)], radius=1)
+
+label(pos = (0,2000,0), text="Red : distance\nYellow : second value (?) + 50, yellow ring materializes 'second value == 0'\nWhite : graph 'second value = f(distance)'\darker colors when X+1:6 is set")
+
 
 # update function, takes the angle (an int, from 0 to 359) and the four bytes of data
 def update_view( angle, x, x1, x2, x3):
-    point2.pos[angle] = vector( 0,0, 0)
-
+    global offset
+    point.pos[angle] = vector( 0, 0, 0)
+    pointb.pos[angle] = vector( 0, 0, 0)
+    point2.pos[angle] = vector( 0, 0, 0)
+    point2b.pos[angle] = vector( 0, 0, 0)
+    point3.pos[angle] = vector( 0, 0, 0)
+    point3b.pos[angle] = vector( 0, 0, 0)
+    
     angle_rad = angle * pi / 180.0
     c = cos(angle_rad)
     s = sin(angle_rad)
 
     dist_raw = x | (( x1 & 0x3f) << 8) # data on 13 bits ? 14 bits ?
     second_value_raw = x2 | (x3 << 8) # data on 10 bits or more ?
+    second_value = second_value_raw + offset
 
     # compute the position of the sample
     if x1 & 0x80: # flag for "bad data" ?
@@ -59,8 +79,17 @@ def update_view( angle, x, x1, x2, x3):
     else:
         # no, it's cool
         #TODO determine what the bit 6 of x1 means...
-        point.pos[angle] = vector( dist_raw*c,0, dist_raw*s)
-        point2.pos[angle] = vector( second_value_raw*c,0, second_value_raw*s)
+        if not x1 & 0x40:
+            # X+1:6 not set
+            point.pos[angle] = vector( dist_raw*c,0, dist_raw*s)
+            point2.pos[angle] = vector( second_value*c,0, second_value*s)
+            point3.pos[angle] = vector( dist_raw, second_value, 0)
+        else:
+            # X+1:6 set... whatever it means...
+            pointb.pos[angle] = vector( dist_raw*c,0, dist_raw*s)
+            point2b.pos[angle] = vector( second_value*c,0, second_value*s)
+            point3b.pos[angle] = vector( dist_raw, second_value, 0)
+            
 
 
 # Demo Mode if you don't have a hacked robot
