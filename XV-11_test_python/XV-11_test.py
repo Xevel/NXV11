@@ -53,6 +53,7 @@ ring(pos=(0,0,0), axis=(0,1,0), radius=offset-1, thickness=1, color = color.yell
 
 label(pos = (0,2000,0), text="Red : distance\nYellow : quality + 50, yellow ring materializes 'quality == 0'\ndarker colors when quality is subpar")
 label_speed = label(pos = (0,500,0) , xoffset =1)
+label_errors = label(pos = (0,800,0) , xoffset =1, text="errors: 0")
 
 # update function, takes the angle (an int, from 0 to 359) and the four bytes of data
 def update_view( angle, x, x1, x2, x3):
@@ -126,6 +127,7 @@ def checksum(data):
 def read_in():
     global in_frame, init_level, angle, index, speed_rpm
 
+    nb_errors = 0
     while True:
         try:
             time.sleep(0.00001) # do not hog the processor power
@@ -173,9 +175,16 @@ def read_in():
                     update_view(index * 4 + 2, b_data2[0], b_data2[1], b_data2[2], b_data2[3])
                     update_view(index * 4 + 3, b_data3[0], b_data3[1], b_data3[2], b_data3[3])
                 else:
-                    # drop the data, something went wrong...
-                    print "oh noes :("
-                    pass
+                    # the checksum does not match, something went wrong...
+                    nb_errors +=1
+                    label_errors.text = "errors: "+str(nb_errors)
+                    
+                    # display the samples in an error state
+                    update_view(index * 4 + 0, 0, 0x80, 0, 0)
+                    update_view(index * 4 + 1, 0, 0x80, 0, 0)
+                    update_view(index * 4 + 2, 0, 0x80, 0, 0)
+                    update_view(index * 4 + 3, 0, 0x80, 0, 0)
+                    
 
                 init_level = 0 # reset and wait for the next packet
                 
