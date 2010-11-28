@@ -20,11 +20,11 @@
 
 
 from visual import *
-import thread, time
+import thread, time, sys, traceback
 
 
 use_real_robot = True # DEMO MODE IS BROKEN RIGHT NOW, USE THE REAL ROBOT OF SPOOF THE DATA FROM AN ARDUINO!
-com_port = 3  # 5 = COM6 on Windows, tty5 on Linux
+com_port = 25  # 5 = COM6 on Windows, tty5 on Linux
 baudrate = 115200
 
 
@@ -106,6 +106,23 @@ init_level = 0
 index = 0
 speed_rpm = 0.0
 
+
+def checksum(data):
+    # group the data my word, little endian
+    data_list = []
+    for t in range(10):
+        data_list.append( data[2*t] + (data[2*t+1]<<8) )
+    
+    # compute the checksum.
+    chk32 = 0
+    for data in data_list:
+        chk32 = (chk32 << 1) + data
+
+    # return a value wrapped around on 15bits, and truncated to still fit into 15 bits
+    checksum = (chk32 & 0x7FFF) + ( chk32 >> 15 ) # wrap around to fit into 15 bits
+    checksum = checksum & 0x7FFF # truncate to 15 bits
+    return int( checksum )
+
 def read_in():
     global in_frame, init_level, angle, index, speed_rpm
 
@@ -138,11 +155,16 @@ def read_in():
                 b_data2 = [ ord(b) for b in ser.read(4)]
                 b_data3 = [ ord(b) for b in ser.read(4)]
 
-                # checksum  
-                b_checksum = [ ord(b) for b in ser.read(2)]
+                # for the checksum, we need all the data of the packet...
+                # this could be collected in a more elegent fashion... 
+                all_data = [ 0xFA, index+0xA0 ] + b_speed + b_data0 + b_data1 + b_data2 + b_data3 
 
-                checksum_ok = True  # todo verify it !
-                if checksum_ok:
+                # checksum  
+                b_checksum = [ ord(b) for b in ser.read(2) ]
+                incoming_checksum = int(b_checksum[0]) + (int(b_checksum[1]) << 8)
+
+                # verify that the received checksum is equal to the one computed from the data
+                if checksum(all_data) == incoming_checksum:
                     speed_rpm = float( b_speed[0] | (b_speed[1] << 8) ) / 64.0
                     label_speed.text = "RPM : " + str(speed_rpm)
                     
@@ -152,14 +174,16 @@ def read_in():
                     update_view(index * 4 + 3, b_data3[0], b_data3[1], b_data3[2], b_data3[3])
                 else:
                     # drop the data, something went wrong...
+                    print "oh noes :("
                     pass
 
                 init_level = 0 # reset and wait for the next packet
                 
             else: # default, should never happen...
                 init_level = 0
-        except Exception,e:
-            print e
+        except :
+            traceback.print_exc(file=sys.stdout)
+
 
 
 if use_real_robot:
