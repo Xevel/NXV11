@@ -24,7 +24,7 @@ import thread, time, sys, traceback
 
 
 use_real_robot = True # DEMO MODE IS BROKEN RIGHT NOW, USE THE REAL ROBOT OF SPOOF THE DATA FROM AN ARDUINO!
-com_port = 25  # 5 = COM6 on Windows, tty5 on Linux
+com_port = 3  # 5 = COM6 on Windows, tty5 on Linux
 baudrate = 115200
 
 
@@ -32,7 +32,7 @@ if use_real_robot:
     import serial
 
 #setup the window, view, etc
-scene.forward = (0,-1,1)
+scene.forward = (0,1,0)
 scene.background=(0.1,0.1,0.2)
 ser = None
 
@@ -49,11 +49,19 @@ point2b=points(pos=[(0,0,0) for i in range(360)], size=2, color=(0.4,0.4,0))
 
 offset = 50
 ring(pos=(0,0,0), axis=(0,1,0), radius=offset-1, thickness=1, color = color.yellow)
-#curve(pos=[(0,offset,0), (3000,offset,0)], radius=1)
+# plot ring every meter
+ring(pos=(0,0,0), axis=(0,1,0), radius=6000, thickness=5, color = color.green)
+ring(pos=(0,0,0), axis=(0,1,0), radius=1000, thickness=1, color = color.green)
+ring(pos=(0,0,0), axis=(0,1,0), radius=2000, thickness=1, color = color.green)
+ring(pos=(0,0,0), axis=(0,1,0), radius=3000, thickness=1, color = color.green)
+ring(pos=(0,0,0), axis=(0,1,0), radius=4000, thickness=1, color = color.green)
+ring(pos=(0,0,0), axis=(0,1,0), radius=5000, thickness=1, color = color.green)
+# draw a line shows 0 degree
+curve(pos=[(0,offset,0), (6000,offset,0)], radius=10)
 
-label(pos = (0,2000,0), text="Red : distance\nYellow : quality + 50, yellow ring materializes 'quality == 0'\ndarker colors when quality is subpar")
-label_speed = label(pos = (0,500,0) , xoffset =1)
-label_errors = label(pos = (0,800,0) , xoffset =1, text="errors: 0")
+label(pos = (0,2000,6000), text="Red : distance , Gray line: 0 degree\nYellow : quality + 50, yellow ring materializes 'quality == 0'\ndarker colors when quality is subpar")
+label_speed  = label(pos = (0,500,-5000) , xoffset =1)
+label_errors = label(pos = (0,800,-4000) , xoffset =1, text="errors: 0")
 
 # update function, takes the angle (an int, from 0 to 359) and the four bytes of data
 def update_view( angle, x, x1, x2, x3):
