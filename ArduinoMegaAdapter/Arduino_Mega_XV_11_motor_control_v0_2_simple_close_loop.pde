@@ -1,5 +1,11 @@
 /*
-Arduino Neato XV-11 Motor control board v0.2 by Cheng-Lung Lee
+Arduino Neato XV-11 Laser Distance Scanner 
+Motor control board v0.2 by Cheng-Lung Lee
+
+XV-11 LDS adapter reads LDS data from RX3 then relay to TX. Also extract the speed 
+data from the data stream to do speed control on LDS motor. Everythin can power 
+from USB no extra power required.
+
 Change log:
 V0.2 Add simple speed control code update PWM 3 times per rev.
 V0.1 Opend loop control version.
