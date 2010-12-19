@@ -13,7 +13,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 #
-# Version 0.3.6
+# Version 0.3.7
 
 
 # Requires VPython
@@ -25,16 +25,38 @@ import thread, time, sys, traceback
 ##---------- SETTINGS -------------- 
 use_real_robot = True # Set to True to use data from the COM port, False to use demo data.
 
-com_port = "COM25"  # 5 = COM6 on Windows, tty5 on Linux
+com_port = "COM25"  # example: 5 == "COM6" == "/dev/tty5"
 baudrate = 115200
 ##---------------------------------
 
+# serial port
 ser = None
 
 #setup the window, view, etc
 scene.forward = (1, -1, 0)
 scene.background = (0.1, 0.1, 0.2)
 scene.title = "Neato XV-11 Laser Distance Sensor - OpenLidarMap"
+
+
+class grid:
+    """A graphical grid, with two level of subdivision.
+
+    The grid can be manipulated (moved, showed/hidden...) by acting on self.frame.
+    """
+    
+    def __init__(self, size=100, small_interval=10, big_interval=50):
+        self.frame = frame(pos=(0,0,0))
+        for i in range(-size, size+small_interval, small_interval):
+            if i %big_interval == 0:
+                c = color.gray(0.65)
+            else:
+                c = color.gray(0.25)
+            curve(frame=self.frame, pos=[(i,0,size),(i,0,-size)], color=c)
+            curve(frame=self.frame, pos=[(size,0,i),(-size,0,i)], color=c)
+
+#grid where major intervals are 1m, mino rintervals are 25cm
+my_grid = grid(size=4000, small_interval = 250, big_interval=1000)
+
 
 ## setup display
 
@@ -48,17 +70,29 @@ point2b = points(pos=[(0,0,0) for i in range(360)], size=3, color=(0.4, 0.4, 0))
 offset = 140
 
 outer_line= curve (pos=[(0,0,0) for i in range(360)], size=5, color=(1  , 0, 0))
-lines=[curve(pos=[(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0)),(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0))]) for i in range(360)]
+lines=[curve(pos=[(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0)),(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0))], color=[(0.1, 0.1, 0.2),(1,0,0)]) for i in range(360)]
 
 zero_intensity_ring = ring(pos=(0,0,0), axis=(0,1,0), radius=offset-1, thickness=1, color = color.yellow)
 
-#draw the robot to indicate
-box(pos = (44,10,0), width=100, length = 50, height = 20)
-cylinder(pos=(19,0,0), axis = (0,20,0), radius=50)
-cylinder(axis= (0,28,0),radius=20)
+#draw the robot (very approximatly)
+robot = frame()
+box(frame=robot, pos = (150,-65,0), width=300, length = 180, height = 100)
+cylinder(frame=robot, pos=(60,-115,0), axis = (0,100,0), radius=150)
+cylinder(frame=robot, pos = (0,10,0), axis= (0,-40,0),radius=60)
+robot.visible = False # and hide it!
+
+#draw the lidar (even more approximatly)
+lidar=frame()
+cylinder(frame=lidar, pos = (0,-8,0), axis = (0,16,0), radius = 40, color=color.gray(0.8))
+cylinder(frame=lidar, pos = (-70,-18,0), axis = (0,-25,0), radius=15, color=color.gray(0.8))
+ring(frame=lidar, pos=(0,-18,0), radius = 60, thickness=10, axis = (0,1,0), color=color.gray(0.8))
+ring(frame=lidar, pos=(-12,-18,0), radius = 50, thickness=10, axis = (0,1,0), color=color.gray(0.8))
+ring(frame=lidar, pos=(-30,-18,0), radius = 40, thickness=10, axis = (0,1,0), color=color.gray(0.8))
+ring(frame=lidar, pos=(-45,-18,0), radius = 30, thickness=10, axis = (0,1,0), color=color.gray(0.8))
+ring(frame=lidar, pos=(-60,-18,0), radius = 20, thickness=10, axis = (0,1,0), color=color.gray(0.8))
 
 #
-label(pos = (0,2000,6000), text="Red : distance\nYellow : quality + 50, yellow ring materializes 'quality == 0'\ndarker colors when quality is subpar")
+label(pos = (0,2000,6000), text="Red : distance\nYellow : intensity, yellow ring materializes 'quality == 0'\nDarker colors when quality is subpar.")
 label_speed = label(pos = (0,500,-5000) , xoffset =1)
 label_errors = label(pos = (0,800,-4000) , xoffset =1, text="errors: 0")
 
@@ -80,7 +114,6 @@ def update_view( angle, data ):
     point2.pos[angle] = vector( 0, 0, 0 )
     point2b.pos[angle] = vector( 0, 0, 0 )
 
-    
     #unpack data using the denomination used during the discussions
     x = data[0]
     x1= data[1]
@@ -98,7 +131,9 @@ def update_view( angle, data ):
     dist_y = dist_mm*s
 
     if not use_lines : lines[angle].pos[1]=(offset*c,0,offset*s)
-    if not use_outer_line : outer_line.pos[angle]=(offset*c,0,offset*s)
+    if not use_outer_line :
+        outer_line.pos[angle]=(offset*c,0,offset*s)
+        outer_line.color[angle] = (0.1, 0.1, 0.2)
     
     
     # display the sample
@@ -106,19 +141,20 @@ def update_view( angle, data ):
         # yes it's bad data
         lines[angle].pos[1]=(offset*c,0,offset*s)
         outer_line.pos[angle]=(offset*c,0,offset*s)
+        outer_line.color[angle] = (0.1, 0.1, 0.2)
     else:
         # no, it's cool
         if not x1 & 0x40:
             # X+1:6 not set : quality is OK
             if use_points : point.pos[angle] = vector( dist_x,0, dist_y)
             if use_intensity : point2.pos[angle] = vector( (quality + offset)*c,0, (quality + offset)*s)
-            if use_lines : lines[angle].color = (1,0,0)
+            if use_lines : lines[angle].color[1] = (1,0,0)
             if use_outer_line : outer_line.color[angle] = (1,0,0)
         else:
             # X+1:6 set : Warning, the quality is not as good as expected
             if use_points : pointb.pos[angle] = vector( dist_x,0, dist_y)
             if use_intensity : point2b.pos[angle] = vector( (quality + offset)*c,0, (quality + offset)*s)
-            if use_lines : lines[angle].color = (0.4,0,0)
+            if use_lines : lines[angle].color[1] = (0.4,0,0)
             if use_outer_line : outer_line.color[angle] = (0.4,0,0)
         if use_lines : lines[angle].pos[1]=( dist_x, 0, dist_y)
         if use_outer_line : outer_line.pos[angle]=( dist_x, 0, dist_y)
@@ -343,8 +379,12 @@ while True:
             use_intensity = not use_intensity
             zero_intensity_ring.visible = use_intensity
 
-
-        
+        elif s=="g": # Toggle grid
+            my_grid.frame.visible = not my_grid.frame.visible
+        elif s=="h": # Toggle robot representation
+            robot.visible = not robot.visible
+        elif s=="j": # Toglle lidar representation
+            lidar.visible = not lidar.visible
             
 
 
