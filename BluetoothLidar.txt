@@ -1,0 +1,32 @@
+Here are some info about the Bluetooth version of the lidar I built.
+
+
+The design is overkill. The same effect could be obtained without the microcontroller. I just threw together stuff I had lying around.
+
+Material used:
+
+- Neato Piccolo LDS (lidar)
+- Pololu Baby Orangutan 328p
+- Sparkfun BlueSMiRF
+- LM1117-33 (800mA 3.3v fixed regulator) + 2x 10uF filtering capacitor
+- a lipo 7.4v 2S battery (I use a 800mAh one, it fits nicely under the lidar) 
+- various wire, connectors.
+
+Adding an interrupter on the alimentation is a good idea too.
+
+The Baby Orangutan could be replaced by an arduino and a motor driver, or just a serial motor controller.
+Or we could even completly ommit the motor controller, and replace it by a fixed regulator, at the cost of loosing the ability to have a retro-action loop.
+
+
+Notes concerning the Baby Orangutan :
+
+- right now, the ATmega48 version (instead of ATmega328p) could be enough.
+- program it with the "BabyOrangutantLidarBluetooth" code. The default/baby_orangutan_lidar_bluetooth.hex binary is for the ATmega328p.
+
+Notes concerning the BlueSMiRF:
+
+- connect RST and CST together
+- configure it so that it goes in Fast Mode quickly ("$$$" to go in configuration mode when in the configuration window, which lasts 60s by default, then "ST,5" to set the configuration window to 5s). I had deconnections of the bluetooth module every 10 seconds or so before I changed that.
+- pair it with your computer using either no code at all (linux) or the default code "1234" (windows). I have not tried with a Mac but it should work the same.
+
+
