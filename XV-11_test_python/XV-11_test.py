@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # XV-11 Lidar Test
 # Copyright 2010 Nicolas "Xevel" Saugnier
 #
@@ -22,12 +24,12 @@
 from visual import *
 import thread, time, sys, traceback
 
-##---------- SETTINGS -------------- 
+#---------- SETTINGS -------------- 
 use_real_robot = True # Set to True to use data from the COM port, False to use demo data.
 
 com_port = "COM25"  # example: 5 == "COM6" == "/dev/tty5"
 baudrate = 115200
-##---------------------------------
+#---------------------------------
 
 # serial port
 ser = None
@@ -36,7 +38,6 @@ ser = None
 scene.forward = (1, -1, 0)
 scene.background = (0.1, 0.1, 0.2)
 scene.title = "Neato XV-11 Laser Distance Sensor - OpenLidarMap"
-
 
 class grid:
     """A graphical grid, with two level of subdivision.
@@ -54,24 +55,23 @@ class grid:
             curve(frame=self.frame, pos=[(i,0,size),(i,0,-size)], color=c)
             curve(frame=self.frame, pos=[(size,0,i),(-size,0,i)], color=c)
 
-#grid where major intervals are 1m, mino rintervals are 25cm
-my_grid = grid(size=4000, small_interval = 250, big_interval=1000)
+#grid where major intervals are 1m, minor intervals are 10cm
+my_grid = grid(size=4000, small_interval = 100, big_interval=1000)
+my_grid.frame.pos.y=-5
 
 
 ## setup display
 
-# points
-point     = points(pos=[(0,0,0) for i in range(360)], size=5, color=(1  , 0, 0))
-pointb    = points(pos=[(0,0,0) for i in range(360)], size=5, color=(0.4, 0, 0))
-
-point2  = points(pos=[(0,0,0) for i in range(360)], size=3, color=(1  , 1,   0))
-point2b = points(pos=[(0,0,0) for i in range(360)], size=3, color=(0.4, 0.4, 0))
-
 offset = 140
 
+# sample and intensity points
+point   = points(pos=[(0,0,0) for i in range(360)], size=5, color=(1  , 0, 0))
+pointb  = points(pos=[(0,0,0) for i in range(360)], size=5, color=(0.4, 0, 0))
+point2  = points(pos=[(0,0,0) for i in range(360)], size=3, color=(1  , 1,   0))
+point2b = points(pos=[(0,0,0) for i in range(360)], size=3, color=(0.4, 0.4, 0))
+#lines
 outer_line= curve (pos=[(0,0,0) for i in range(360)], size=5, color=(1  , 0, 0))
 lines=[curve(pos=[(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0)),(offset*cos(i* pi / 180.0),0,offset*-sin(i* pi / 180.0))], color=[(0.1, 0.1, 0.2),(1,0,0)]) for i in range(360)]
-
 zero_intensity_ring = ring(pos=(0,0,0), axis=(0,1,0), radius=offset-1, thickness=1, color = color.yellow)
 
 #draw the robot (very approximatly)
@@ -91,10 +91,32 @@ ring(frame=lidar, pos=(-30,-18,0), radius = 40, thickness=10, axis = (0,1,0), co
 ring(frame=lidar, pos=(-45,-18,0), radius = 30, thickness=10, axis = (0,1,0), color=color.gray(0.8))
 ring(frame=lidar, pos=(-60,-18,0), radius = 20, thickness=10, axis = (0,1,0), color=color.gray(0.8))
 
-#
-label(pos = (0,2000,6000), text="Red : distance\nYellow : intensity, yellow ring materializes 'quality == 0'\nDarker colors when quality is subpar.")
-label_speed = label(pos = (0,500,-5000) , xoffset =1)
-label_errors = label(pos = (0,800,-4000) , xoffset =1, text="errors: 0")
+#Text
+label_help = label(pos = (0,0,0))
+label_help.text="""Red : distance.
+Yellow : intensity (the ring materializes 'intensity == 0')
+Darker colors when quality is subpar.
+The grid has 10cm intervals.
+
+Mouse:
+Left+drag = rotate
+Left+Right+drag = zoom
+
+Keyboard:
+h : show/hide this help
+r : start motor (bluetooth version)
+s : stop motor (bluetooth version)
+i : show/hide intensity dots
+o : show/hide distance outer line
+p : show/hide distance dots
+l : show/hide distance rays
+j : show/hide RPM label
+k : show/hide error count
+g : show/hide grid
+b : show/hide robot 3D model
+n : show/hide lidar 3D model"""
+label_speed = label(pos = (0,-500,0), xoffset=1, box=False, opacity=0.1)
+label_errors = label(pos = (0,-1000,0), xoffset=1, text="errors: 0", visible = False, box=False)
 
 use_points = True
 use_outer_line = False
@@ -254,8 +276,6 @@ index = 0
 #rpm_setpoint = 300.0
 #controler = pid_controler()
 #controler.set_out_ratio(255)
-
-
 def motor_control( speed ):
     global ser, controler, rpm_setpoint
     val = controler.process( speed - rpm_setpoint)
@@ -381,10 +401,17 @@ while True:
 
         elif s=="g": # Toggle grid
             my_grid.frame.visible = not my_grid.frame.visible
-        elif s=="h": # Toggle robot representation
+        elif s=="b": # Toggle robot representation
             robot.visible = not robot.visible
-        elif s=="j": # Toglle lidar representation
+        elif s=="n": # Toglle lidar representation
             lidar.visible = not lidar.visible
+
+        elif s=="h": # Toggle help
+            label_help.visible = not label_help.visible
+        elif s=="j": # Toggle rpm
+            label_speed.visible = not label_speed.visible
+        elif s=="k": # Toggle errors
+            label_errors.visible = not label_errors.visible
             
 
 
